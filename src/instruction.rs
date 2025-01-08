@@ -1,9 +1,9 @@
+#![allow(unused)]
 //! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a?token=#E3.Ciaeiijh
-use crate::error::ParseError;
 use crate::errors::ParseError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Register {
+pub enum Register {
     R0,
     R1,
     R2,
@@ -23,7 +23,7 @@ enum Register {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum CRegister {
+pub enum CRegister {
     Cr1,
     Cr2,
     Cr3,
@@ -89,14 +89,12 @@ pub const fn split_with_mask(value: u32, mask: u32) -> (u32, u32) {
     let second = value & !mask;
     (first, second)
 }
-pub mod consts{
-    pub
-}
+pub mod consts {}
 impl TryFrom<u32> for Cond {
     type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        let val = check_rest_null_mask(value,0b1111<<28)?;
+        let val = check_rest_null_mask(value, 0b1111 << 28)?;
         use Cond::*;
         Ok(match val {
             0 => Equal,
@@ -120,52 +118,132 @@ impl TryFrom<u32> for Cond {
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DataProssessingInstruction {
+    ///Add with Carry. See ADC on page A4-4.
+    ADC {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Add. See ADD on page A4-6.
+    ADD {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Logical AND. See AND on page A4-8.
+    AND {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Logical Bit Clear. See BIC on page A4-12.
+    BIC {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Compare Negative. See CMN on page A4-26.
+    CMN {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Compare. See CMP on page A4-28.
+    CMP {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Logical EOR. See EOR on page A4-32.
+    EOR {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Move. See MOV on page A4-68.
+    MOV {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Move Not. See MVN on page A4-82.
+    MVN {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Logical OR. See ORR on page A4-84.
+    ORR {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Reverse Subtract. See RSB on page A4-115.
+    RSB {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Reverse Subtract with Carry. See RSC on page A4-117.
+    RSC {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Subtract with Carry. See SBC on page A4-125.
+    SBC {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Subtract. See SUB on page A4-208.
+    SUB {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Test Equivalence. See TEQ on page A4-228.
+    TEQ {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+    ///Test. See TST on page A4-230.
+    TST {
+        destination: Register,
+        first_operand: Register,
+        s: bool,
+        shifter: ShifterOperand,
+    },
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BranchInstruction {
     ///Branch. See B on page A4-10.
-    B,
+    B(i32),
     ///Branch with Link. See BL on page A4-10.
-    BL,
+    BL(i32),
     ///Branch with Link and Exchange. See BLX (1) on page A4-16 and BLX (2) on page A4-18.
     BLX,
     ///Branch and Exchange Instruction Set. See BX on page A4-20.
     BX,
     ///Branch and change to Jazelle state. See BXJ on page A4-21.
     BXJ,
-}
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DataProssessingInstruction {
-    ///Add with Carry. See ADC on page A4-4.
-    ADC,
-    ///Add. See ADD on page A4-6.
-    ADD,
-    ///Logical AND. See AND on page A4-8.
-    AND,
-    ///Logical Bit Clear. See BIC on page A4-12.
-    BIC,
-    ///Compare Negative. See CMN on page A4-26.
-    CMN,
-    ///Compare. See CMP on page A4-28.
-    CMP,
-    ///Logical EOR. See EOR on page A4-32.
-    EOR,
-    ///Move. See MOV on page A4-68.
-    MOV,
-    ///Move Not. See MVN on page A4-82.
-    MVN,
-    ///Logical OR. See ORR on page A4-84.
-    ORR,
-    ///Reverse Subtract. See RSB on page A4-115.
-    RSB,
-    ///Reverse Subtract with Carry. See RSC on page A4-117.
-    RSC,
-    ///Subtract with Carry. See SBC on page A4-125.
-    SBC,
-    ///Subtract. See SUB on page A4-208.
-    SUB,
-    ///Test Equivalence. See TEQ on page A4-228.
-    TEQ,
-    ///Test. See TST on page A4-230.
-    TST,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MultiplyInstruction {
@@ -378,10 +456,11 @@ pub enum CoprocessorInstruction {
     ///Store Coprocessor Register. See STC on page A4-186.
     STC,
 }
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShifterOperand {
     Immediate(u32),
     Register(Register),
-    ShiftLeft(u32,)
+    ShiftLeft(u32),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -405,7 +484,7 @@ impl TryFrom<u32> for PartialInstruction {
     type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        split_with_mask(value,0b1111<<28);
+        split_with_mask(value, 0b1111 << 28);
         todo!()
     }
 }

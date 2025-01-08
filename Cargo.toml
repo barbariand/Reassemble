@@ -8,3 +8,4 @@ clap = { version = "4.5.23", features = ["derive"] }
 thiserror = "2.0.9"
 tracing = { version = "0.1.41", features = ["log-always"] }
 tracing-subscriber = { version = "0.3.19" }
+ux = "0.1.6"
