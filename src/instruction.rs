@@ -1,5 +1,6 @@
 //! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a?token=#E3.Ciaeiijh
 use crate::error::ParseError;
+use crate::errors::ParseError;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Register {
@@ -39,7 +40,87 @@ enum CRegister {
     Cr14,
     Cr15,
 }
-pub enum BranchInstructions {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Cond {
+    /// 0000 EQ
+    Equal,
+    /// 0001 NE
+    NotEqual,
+    /// 0010 CS/HS
+    CarrySet,
+    /// 0011 CC/LO
+    CarryClear,
+    /// 0100 MI
+    Minus,
+    /// 0101 PL
+    Plus,
+    /// 0110 VS
+    Overflow,
+    /// 0111 VC
+    NoOverflow,
+    /// 1000 HI
+    Higher,
+    /// 1001 LS
+    LowerOrSame,
+    /// 1010 GE
+    SignedGreaterOrEqual,
+    /// 1011 LT
+    SignedLessThan,
+    /// 1100 GT
+    SignedGreaterThan,
+    /// 1101 LE
+    SignedLessThanOrEqual,
+    /// 1110 AL
+    Allways,
+    /// 1111 Equal
+    Unconditional,
+}
+pub const fn check_rest_null_mask(value: u32, mask: u32) -> Result<u32, ParseError> {
+    if value & !mask > 0 {
+        return Err(ParseError::InvalidMask {
+            invalid_set_bytes: value & !mask,
+        });
+    } else {
+        Ok(value & mask)
+    }
+}
+pub const fn split_with_mask(value: u32, mask: u32) -> (u32, u32) {
+    let first = value & mask;
+    let second = value & !mask;
+    (first, second)
+}
+pub mod consts{
+    pub
+}
+impl TryFrom<u32> for Cond {
+    type Error = ParseError;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let val = check_rest_null_mask(value,0b1111<<28)?;
+        use Cond::*;
+        Ok(match val {
+            0 => Equal,
+            1 => NotEqual,
+            2 => CarrySet,
+            3 => CarryClear,
+            4 => Minus,
+            5 => Plus,
+            6 => Overflow,
+            7 => NoOverflow,
+            8 => Higher,
+            9 => LowerOrSame,
+            10 => SignedGreaterOrEqual,
+            11 => SignedLessThan,
+            12 => SignedGreaterThan,
+            13 => SignedLessThanOrEqual,
+            14 => Allways,
+            15 => Unconditional,
+            _ => unreachable!("Maskiong in cond is wrong"),
+        })
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BranchInstruction {
     ///Branch. See B on page A4-10.
     B,
     ///Branch with Link. See BL on page A4-10.
@@ -51,7 +132,8 @@ pub enum BranchInstructions {
     ///Branch and change to Jazelle state. See BXJ on page A4-21.
     BXJ,
 }
-pub enum DataProssessingInstructions {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DataProssessingInstruction {
     ///Add with Carry. See ADC on page A4-4.
     ADC,
     ///Add. See ADD on page A4-6.
@@ -85,7 +167,8 @@ pub enum DataProssessingInstructions {
     ///Test. See TST on page A4-230.
     TST,
 }
-pub enum MultiplyInstructions {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MultiplyInstruction {
     ///Multiply Accumulate. See MLA on page A4-66.
     MLA,
     ///Multiply. See MUL on page A4-80.
@@ -131,7 +214,8 @@ pub enum MultiplyInstructions {
     ///Unsigned Multiply Long. See UMULL on page A4-251.
     UMULL,
 }
-pub enum AritmaticInstructions {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AritmaticInstruction {
     ///Dual 16-bit signed saturating addition. See QADD16 on page A4-94.
     QADD16,
     ///Quad 8-bit signed saturating addition. See QADD8 on page A4-95.
@@ -208,7 +292,8 @@ pub enum AritmaticInstructions {
     CLZ,
 }
 
-pub enum LoadAndStore {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoadAndStoreInstruction {
     ///Load Word. See LDR on page A4-43.
     LDR,
     ///Load Byte. See LDRB on page A4-46.
@@ -241,88 +326,86 @@ pub enum LoadAndStore {
     STRH,
     ///Store Word with User Mode Privilege. See STRT on page A4-206.
     STRT,
-    Multiple()
+    Multiple(LoadAndStoreMultiple),
 }
-pub enum LoadAndStoreMultiple{
-LDM Load Multiple. See LDM (1) on page A4-36.
-LDM User Registers Load Multiple. See LDM (2) on page A4-38.
-LDM Load Multiple with Restore CPSR. See LDM (3) on page A4-40.
-STM Store Multiple. See STM (1) on page A4-189.DateIDTM User Registers Store Multiple. See STM (2) on page A4-191
+impl From<LoadAndStoreMultiple> for LoadAndStoreInstruction {
+    fn from(value: LoadAndStoreMultiple) -> Self {
+        Self::Multiple(value)
+    }
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoadAndStoreMultiple {
+    ///Load Multiple. See LDM (1) on page A4-36.
+    LDM,
+    ///User Registers Load Multiple. See LDM (2) on page A4-38.
+    LDMR,
+    ///Load Multiple with Restore CPSR. See LDM (3) on page A4-40.
+    LDMC,
+    ///Store Multiple. See STM (1) on page A4-189.
+    STM,
+    ///User Registers Store Multiple. See STM (2) on page A4-191.
+    STMR,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SemaphoreInstruction {
+    ///Swap. See SWP on page A4-212.
+    SWP,
+    ///Swap Byte. See SWPB on page A4-214.
+    SWPB,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ExceptiongeneratingInstruction {
+    ///Breakpoint. See BKPT on page A4-14.
+    BKPT,
+    ///Software Interrupt. See SWI on page A4-210.
+    SWI,
+}
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CoprocessorInstruction {
+    ///Coprocessor Data Operations. See CDP on page A4-23.
+    CDP,
+    ///Load Coprocessor Register. See LDC on page A4-34.
+    LDC,
+    ///Move to Coprocessor from ARM Register. See MCR on page A4-62.
+    MCR,
+    ///Move to Coprocessor from two ARM Registers. See MCRR on page A4-64.
+    MCRR,
+    ///Move to ARM Register from Coprocessor. See MRC on page A4-70.
+    MRC,
+    ///Move to two ARM Registers from Coprocessor. See MRRC on page A4-72.
+    MRRC,
+    ///Store Coprocessor Register. See STC on page A4-186.
+    STC,
+}
+pub enum ShifterOperand {
+    Immediate(u32),
+    Register(Register),
+    ShiftLeft(u32,)
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Instruction {
+pub enum PartialInstruction {
     // Branch Instructions
-    B(u32),
-    Bl(u32),
-    Bx(Register),
-    // Data Processing Instructions
-    Add(Register, Register, Register),
-    Sub(Register, Register, Register),
-    And(Register, Register, Register),
-    Xor(Register, Register, Register),
-    Or(Register, Register, Register),
-    Mov(Register, Register),
-    Cmp(Register, Register),
-    Mvn(Register, Register),
-    // Load/Store Instructions
-    Ldr(Register, Register),
-    Str(Register, Register),
-    Ldrb(Register, Register),
-    Strb(Register, Register),
-    Ldrh(Register, Register),
-    Strh(Register, Register),
-    Ldm(Register, Vec<Register>),
-    Stm(Register, Vec<Register>),
-    // Multiply Instructions
-    Mul(Register, Register, Register),
-    Mla(Register, Register, Register, Register),
-    Umull(Register, Register, Register, Register),
-    Umulal(Register, Register, Register, Register),
-    Smlal(Register, Register, Register, Register),
-    Smull(Register, Register, Register, Register),
-    // Data Processing Instructions (with S flag)
-    AddS(Register, Register, Register),
-    SubS(Register, Register, Register),
-    AndS(Register, Register, Register),
-    EorS(Register, Register, Register),
-    OrS(Register, Register, Register),
-    MovS(Register, Register),
-    CmpS(Register, Register),
-    // Load/Store Multiple Instructions
-    Ldmda(Register, Vec<Register>),
-    Ldmfa(Register, Vec<Register>),
-    Ldmdb(Register, Vec<Register>),
-    Ldmib(Register, Vec<Register>),
-    Stmda(Register, Vec<Register>),
-    Stmfa(Register, Vec<Register>),
-    Stmdb(Register, Vec<Register>),
-    Stmib(Register, Vec<Register>),
-    // Media Instructions
-    Sadd16(Register, Register, Register),
-    Sub16(Register, Register, Register),
-    Shl16(Register, Register, Register),
-    Asr16(Register, Register, Register),
-    Rrx(Register, Register),
-    // Miscellaneous Instructions
-    Swp(Register, Register, Register),
-    Swpb(Register, Register, Register),
-    // Coprocessor Instructions
-    Cdcc(u8, u8, u8, u8),
-    Cdc(u8, u8, u8, u8),
-    Mrc(u8, u8, u8, Register, Register, u8),
-    Mrc2(u8, u8, u8, Register, Register, u8),
-    // Coprocessor Data Transfer Instructions
-    Ldc(u8, u8, Register, Register),
-    Ldc2(u8, u8, Register, Register),
-    Stc(u8, u8, Register, Register),
-    Stc2(u8, u8, Register, Register),
+    Branch(BranchInstruction),
+    DataProssessing(DataProssessingInstruction),
+    Multiply(MultiplyInstruction),
+    Aritmatic(AritmaticInstruction),
+    LoadAndStore(LoadAndStoreInstruction),
+    Semaphore(SemaphoreInstruction),
+    Exceptiongenerating(ExceptiongeneratingInstruction),
+    Coprocessor(CoprocessorInstruction),
 }
-impl TryFrom<u32> for Instruction {
+pub struct Instruction {
+    pub cond: Cond,
+    pub partial: PartialInstruction,
+}
+
+impl TryFrom<u32> for PartialInstruction {
     type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
+        split_with_mask(value,0b1111<<28);
         todo!()
     }
 }
