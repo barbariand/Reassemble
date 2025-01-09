@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bitflags = "2.6.0"
 clap = { version = "4.5.23", features = ["derive"] }
 thiserror = "2.0.9"
 tracing = { version = "0.1.41", features = ["log-always"] }

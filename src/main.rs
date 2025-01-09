@@ -1,7 +1,7 @@
 #![feature(slice_as_chunks)]
 
 pub mod errors;
-mod instruction;
+mod instructions;
 mod parser;
 use std::path::PathBuf;
 
