@@ -35,6 +35,10 @@ pub enum UnconditionalInstruction {
         second_register:Register,
         destination:CRegister,
     },
+    ///Pre load data. See PLD on page A4-90.
+    PLD{
+        addressing_mode:AddressingMode,
+    },
 }
 
 impl TryFrom<u32> for UnconditionalInstruction {

@@ -11,6 +11,17 @@ use multiply::MultiplyInstruction;
 use semaphore::SemaphoreInstruction;
 use unconditional::UnconditionalInstruction;
 
+use self::register_access_instructions::RegisterAccessInstruction;
+pub trait TryArmInstruction: Sized {
+    const MASK: u32;
+    fn try_from(value: u32) -> Result<Self, ParseError>;
+    const fn split_mask(value: u32) -> (u32,u32) {
+        let first = value & Self::MASK;
+        let second = value & !Self::MASK;
+        (first, second)
+    }
+}
+mod adresssing;
 pub mod arithmetic;
 pub mod branch;
 pub mod coprocessor;
@@ -18,15 +29,13 @@ pub mod dataprosessing;
 pub mod exception;
 pub mod loadandstore;
 pub mod multiply;
+mod register_access_instructions;
 pub mod semaphore;
 pub mod unconditional;
-mod register_access_instructions;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PostIndexedAddressingMode{}
+pub struct PostIndexedAddressingMode {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct AddressingMode{
-
-}
+pub struct AddressingMode {}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArmInstruction {
     /// 0000 EQ
@@ -74,6 +83,7 @@ pub enum PartialArmInstruction {
     Semaphore(SemaphoreInstruction),
     Exceptiongenerating(ExceptiongeneratingInstruction),
     Coprocessor(CoprocessorInstruction),
+    RegisterAccess(RegisterAccessInstruction),
 }
 impl TryFrom<u32> for PartialArmInstruction {
     type Error = ParseError;

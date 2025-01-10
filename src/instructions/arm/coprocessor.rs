@@ -21,39 +21,45 @@ pub enum CoprocessorInstruction {
         addressing_mode: AddressingMode,
     },
     ///Move to Coprocessor from ARM Register. See MCR on page A4-62.
-    MCR{
+    MCR {
         coprocessor: Coprocessor,
-        value:Register,
+        value: Register,
         destination: CRegister,
         additional_destination: CRegister,
         opcode_1: u8,
         opcode_2: u8,
     },
     ///Move to Coprocessor from two ARM Registers. See MCRR on page A4-64.
-    MCRR{
+    MCRR {
         coprocessor: Coprocessor,
         opcode: u8,
-        first_register:Register,
-        second_register:Register,
-        destination:CRegister,
+        first_register: Register,
+        second_register: Register,
+        destination: CRegister,
     },
     ///Move to ARM Register from Coprocessor. See MRC on page A4-70.
-    MRC{
+    MRC {
         coprocessor: Coprocessor,
-        value:Register,
+        value: Register,
         destination: CRegister,
         additional_destination: CRegister,
         opcode_1: u8,
         opcode_2: u8,
     },
     ///Move to two ARM Registers from Coprocessor. See MRRC on page A4-72.
-    MRRC{
+    MRRC {
         coprocessor: Coprocessor,
         opcode: u8,
-        first_register:Register,
-        second_register:Register,
-        destination:CRegister,
+        first_register: Register,
+        second_register: Register,
+        destination: CRegister,
     },
     ///Store Coprocessor Register. See STC on page A4-186.
-    STC,
+    STC {
+        l: bool,
+
+        coprocessor: Coprocessor,
+        soruce: CRegister,
+        addressing_mode: AddressingMode,
+    },
 }

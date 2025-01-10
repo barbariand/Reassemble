@@ -60,7 +60,6 @@ pub enum DataProssessingInstruction {
     ///Move Not. See MVN on page A4-82.
     MVN {
         destination: Register,
-        first_operand: Register,
         s: bool,
         shifter: ShifterOperand,
     },
@@ -101,14 +100,12 @@ pub enum DataProssessingInstruction {
     },
     ///Test Equivalence. See TEQ on page A4-228.
     TEQ {
-        destination: Register,
         first_operand: Register,
         s: bool,
         shifter: ShifterOperand,
     },
     ///Test. See TST on page A4-230.
     TST {
-        destination: Register,
         first_operand: Register,
         s: bool,
         shifter: ShifterOperand,

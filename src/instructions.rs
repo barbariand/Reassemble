@@ -2,15 +2,17 @@
 //! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a?token=#E3.Ciaeiijh
 pub mod arm;
 
+use crate::errors::ParseError;
+use bitflags::bitflags;
 use std::mem;
 use std::ops::BitOr;
-use bitflags::bitflags;
-use crate::errors::ParseError;
-pub struct PSRFlags{
-    c:bool,
-    x:bool,
-    s:bool,
-    f:bool,
+use ux::u4;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PSRFlags {
+    c: bool,
+    x: bool,
+    s: bool,
+    f: bool,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RegisterList(u16);
@@ -34,7 +36,7 @@ bitflags! {
     }
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Coprocessor{
+pub enum Coprocessor {
     P0,
     P1,
     P2,
@@ -70,6 +72,13 @@ pub enum Register {
     R13,
     R14,
     R15,
+}
+impl From<u8> for Register {
+    fn from(value: u8) -> Self {
+
+        match value{
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
