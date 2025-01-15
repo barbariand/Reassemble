@@ -12,15 +12,6 @@ use semaphore::SemaphoreInstruction;
 use unconditional::UnconditionalInstruction;
 
 use self::register_access_instructions::RegisterAccessInstruction;
-pub trait TryArmInstruction: Sized {
-    const MASK: u32;
-    fn try_from(value: u32) -> Result<Self, ParseError>;
-    const fn split_mask(value: u32) -> (u32,u32) {
-        let first = value & Self::MASK;
-        let second = value & !Self::MASK;
-        (first, second)
-    }
-}
 mod adresssing;
 pub mod arithmetic;
 pub mod branch;
@@ -89,7 +80,19 @@ impl TryFrom<u32> for PartialArmInstruction {
     type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        todo!()
+        let (switch, rest) = split_with_mask(value, 0b11 << 25);
+        use PartialArmInstruction::*;
+        Ok(match switch >> 25 {
+            0b000 => DataProssessing(rest.try_into()?),
+            0b001 => DataProssessing(rest.try_into()?),
+            0b010 => todo!(),
+            0b011 => todo!(),
+            0b100 => todo!(),
+            0b101 => todo!(),
+            0b110 => todo!(),
+            0b111 => todo!(),
+            _ => todo!(),
+        })
     }
 }
 impl TryFrom<u32> for ArmInstruction {
@@ -98,7 +101,7 @@ impl TryFrom<u32> for ArmInstruction {
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         let (cond, rest) = split_with_mask(value, 0b1111 << 28);
         use ArmInstruction::*;
-        Ok(match cond {
+        Ok(match cond >> 28 {
             (0) => {
                 let inst: PartialArmInstruction = rest.try_into()?;
                 Equal(inst)
@@ -164,7 +167,7 @@ impl TryFrom<u32> for ArmInstruction {
                 let inst = rest.try_into()?;
                 Unconditional(inst)
             }
-            (16_u32..=u32::MAX) => {
+            _ => {
                 unreachable!("Masking in cond is wrong, got {} expected < 16", cond)
             }
         })

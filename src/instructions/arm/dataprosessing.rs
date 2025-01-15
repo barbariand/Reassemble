@@ -1,5 +1,5 @@
-use crate::instructions::{Register, ShifterOperand};
-
+use crate::errors::ParseError;
+use crate::instructions::{split_with_mask, Register, ShifterOperand};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataProssessingInstruction {
@@ -110,4 +110,62 @@ pub enum DataProssessingInstruction {
         s: bool,
         shifter: ShifterOperand,
     },
+}
+impl TryFrom<u32> for DataProssessingInstruction {
+    type Error = ParseError;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let (opcode, rest) = split_with_mask(value, 0b1111 << 20);
+        let (rn, rest) = split_with_mask(rest, 0b1111 << 15);
+        let rn = ((rn >> 16) as u8).try_into()?;
+        let s = ((rest >> 20) & 1) == 1;
+        use DataProssessingInstruction::*;
+        Ok(match opcode >> 20 {
+            0b0101 => {
+                let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
+                let rd = ((rd >> 12) as u8).try_into()?;
+                let shifter = rest.try_into()?;
+                ADC {
+                    destination: rd,
+                    first_operand: rn,
+                    s,
+                    shifter,
+                }
+            }
+            0b0100 => {
+                let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
+                let rd = ((rd >> 12) as u8).try_into()?;
+                let shifter = rest.try_into()?;
+                ADD {
+                    destination: rd,
+                    first_operand: rn,
+                    s,
+                    shifter,
+                }
+            }
+            0b0000 => {
+                let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
+                let rd = ((rd >> 12) as u8).try_into()?;
+                let shifter = rest.try_into()?;
+                AND {
+                    destination: rd,
+                    first_operand: rn,
+                    s,
+                    shifter,
+                }
+            }
+            0b0000 => {
+                let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
+                let rd = ((rd >> 12) as u8).try_into()?;
+                let shifter = rest.try_into()?;
+                BIC {
+                    destination: rd,
+                    first_operand: rn,
+                    s,
+                    shifter,
+                }
+            }
+            bin => todo!("unimpemented dataprocessing opcode {:b}", bin),
+        })
+    }
 }

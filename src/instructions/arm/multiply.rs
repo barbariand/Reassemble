@@ -1,4 +1,4 @@
-use crate::instructions::{Register, ShifterOperand};
+use crate::instructions::Register;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MultiplyInstruction {

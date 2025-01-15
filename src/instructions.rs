@@ -2,7 +2,7 @@
 //! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a?token=#E3.Ciaeiijh
 pub mod arm;
 
-use crate::errors::ParseError;
+use crate::errors::{DisasemblerError, ParseError};
 use bitflags::bitflags;
 use std::mem;
 use std::ops::BitOr;
@@ -54,6 +54,35 @@ pub enum Coprocessor {
     P14,
     P15,
 }
+impl TryFrom<u8> for Coprocessor {
+    type Error = ParseError;
+    fn try_from(value: u8) -> Result<Self, ParseError> {
+        use Coprocessor::*;
+        Ok(match value {
+            0 => P0,
+            1 => P1,
+            2 => P2,
+            3 => P3,
+            4 => P4,
+            5 => P5,
+            6 => P6,
+            7 => P7,
+            8 => P8,
+            9 => P9,
+            10 => P10,
+            11 => P11,
+            12 => P12,
+            13 => P13,
+            14 => P14,
+            15 => P15,
+            e => {
+                return Err(ParseError::InvalidMask {
+                    invalid_set_bytes: { (e & !(0b1111)) as u32 },
+                })
+            }
+        })
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     R0,
@@ -73,16 +102,39 @@ pub enum Register {
     R14,
     R15,
 }
-impl From<u8> for Register {
-    fn from(value: u8) -> Self {
-
-        match value{
-        }
+impl TryFrom<u8> for Register {
+    type Error = ParseError;
+    fn try_from(value: u8) -> Result<Self, ParseError> {
+        use Register::*;
+        Ok(match value {
+            0 => R0,
+            1 => R1,
+            2 => R2,
+            3 => R3,
+            4 => R4,
+            5 => R5,
+            6 => R6,
+            7 => R7,
+            8 => R8,
+            9 => R9,
+            10 => R10,
+            11 => R11,
+            12 => R12,
+            13 => R13,
+            14 => R14,
+            15 => R15,
+            e => {
+                return Err(ParseError::InvalidMask {
+                    invalid_set_bytes: { (e & !(0b1111)) as u32 },
+                })
+            }
+        })
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CRegister {
+    Cr0,
     Cr1,
     Cr2,
     Cr3,
@@ -98,6 +150,35 @@ pub enum CRegister {
     Cr13,
     Cr14,
     Cr15,
+}
+impl TryFrom<u8> for CRegister {
+    type Error = ParseError;
+    fn try_from(value: u8) -> Result<Self, ParseError> {
+        use CRegister::*;
+        Ok(match value {
+            0 => Cr0,
+            1 => Cr1,
+            2 => Cr2,
+            3 => Cr3,
+            4 => Cr4,
+            5 => Cr5,
+            6 => Cr6,
+            7 => Cr7,
+            8 => Cr8,
+            9 => Cr9,
+            10 => Cr10,
+            11 => Cr11,
+            12 => Cr12,
+            13 => Cr13,
+            14 => Cr14,
+            15 => Cr15,
+            e => {
+                return Err(ParseError::InvalidMask {
+                    invalid_set_bytes: { (e & !(0b1111)) as u32 },
+                })
+            }
+        })
+    }
 }
 pub const fn check_rest_null_mask(value: u32, mask: u32) -> Result<u32, ParseError> {
     if value & !mask > 0 {
@@ -125,4 +206,12 @@ pub enum ShifterOperand {
     Immediate(u32),
     Register(Register),
     ShiftLeft(u32),
+}
+impl TryFrom<u32> for ShifterOperand{
+    type Error=ParseError;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let (i,rest)=split_with_mask(value, 1<<24);
+        Ok(Self::Immediate(value))
+    }
 }

@@ -12,7 +12,7 @@ use self::errors::DisasemblerError;
 use self::parser::Parser;
 #[derive(ClapParser)]
 struct Options {
-    #[clap(long, value_parser = file_exists )]
+    #[clap( value_parser = file_exists )]
     file: PathBuf,
 }
 fn file_exists(v: &str) -> Result<PathBuf, String> {
@@ -33,5 +33,8 @@ pub fn main() -> Result<(), DisasemblerError> {
         .with_max_level(tracing::Level::DEBUG)
         .init();
     let a: Parser = Options::parse().try_into()?;
-    Ok(())
+
+    let v=a.parse()?;
+    println!("{:?}",v);
+        Ok(())
 }
