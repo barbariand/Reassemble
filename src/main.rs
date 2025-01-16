@@ -9,6 +9,7 @@ use clap::Parser as ClapParser;
 use tracing::error;
 
 use self::errors::DisasemblerError;
+use self::instructions::arm::ArmInstruction;
 use self::parser::Parser;
 #[derive(ClapParser)]
 struct Options {
@@ -29,12 +30,14 @@ fn file_exists(v: &str) -> Result<PathBuf, String> {
     }
 }
 pub fn main() -> Result<(), DisasemblerError> {
+    let s = size_of::<ArmInstruction>();
+    println!("Size of instruction bytes {}", s);
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
     let a: Parser = Options::parse().try_into()?;
 
-    let v=a.parse()?;
-    println!("{:?}",v);
-        Ok(())
+    let v = a.parse()?;
+    println!("{:?}", v);
+    Ok(())
 }
