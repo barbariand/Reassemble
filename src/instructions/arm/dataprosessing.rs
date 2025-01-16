@@ -60,9 +60,9 @@ pub struct GenericDataInstruction {
     shifter: ShifterOperand,
 }
 impl GenericDataInstruction {
-    fn new(value: u32, rn: Register) -> Result<Self, ParseError> {
+    fn new(rest: u32, rn: Register) -> Result<Self, ParseError> {
         let s = ((rest >> 20) & 1) == 1;
-        let (rd, rest) = split_with_mask(value, 0b1111 << 11);
+        let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
         let rd = ((rd >> 12) as u8).try_into()?;
         let shifter = rest.try_into()?;
         Ok(Self {

@@ -1,5 +1,4 @@
 #![feature(slice_as_chunks)]
-
 pub mod errors;
 mod instructions;
 mod parser;
@@ -30,8 +29,6 @@ fn file_exists(v: &str) -> Result<PathBuf, String> {
     }
 }
 pub fn main() -> Result<(), DisasemblerError> {
-    let s = size_of::<ArmInstruction>();
-    println!("Size of instruction bytes {}", s);
     tracing_subscriber::fmt()
         .with_max_level(tracing::Level::DEBUG)
         .init();
