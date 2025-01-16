@@ -1,6 +1,9 @@
 use crate::errors::ParseError;
 use crate::instructions::{split_with_mask, Register, ShifterOperand};
-
+pub enum Test {
+    TEST,
+    TEST2,
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DataProssessingInstruction {
     ///Add with Carry. See ADC on page A4-4.
@@ -12,23 +15,15 @@ pub enum DataProssessingInstruction {
     ///Logical Bit Clear. See BIC on page A4-12.
     BIC(GenericDataInstruction),
     ///Compare Negative. See CMN on page A4-26.
-    CMN {},
+    CMN(NoDestinationDataInstruction),
     ///Compare. See CMP on page A4-28.
-    CMP {
-        first_operand: Register,
-        s: bool,
-        shifter: ShifterOperand,
-    },
+    CMP(NoDestinationDataInstruction),
     ///Logical EOR. See EOR on page A4-32.
     EOR(GenericDataInstruction),
     ///Move. See MOV on page A4-68.
-    MOV(GenericDataInstruction),
+    MOV(MOVLikeDataInstruction),
     ///Move Not. See MVN on page A4-82.
-    MVN {
-        destination: Register,
-        s: bool,
-        shifter: ShifterOperand,
-    },
+    MVN(MOVLikeDataInstruction),
     ///Logical OR. See ORR on page A4-84.
     ORR(GenericDataInstruction),
     ///Reverse Subtract. See RSB on page A4-115.
@@ -40,17 +35,9 @@ pub enum DataProssessingInstruction {
     ///Subtract. See SUB on page A4-208.
     SUB(GenericDataInstruction),
     ///Test Equivalence. See TEQ on page A4-228.
-    TEQ {
-        first_operand: Register,
-        s: bool,
-        shifter: ShifterOperand,
-    },
+    TEQ(NoDestinationDataInstruction),
     ///Test. See TST on page A4-230.
-    TST {
-        first_operand: Register,
-        s: bool,
-        shifter: ShifterOperand,
-    },
+    TST(NoDestinationDataInstruction),
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericDataInstruction {
@@ -60,9 +47,9 @@ pub struct GenericDataInstruction {
     shifter: ShifterOperand,
 }
 impl GenericDataInstruction {
-    fn new(rest: u32, rn: Register) -> Result<Self, ParseError> {
-        let s = ((rest >> 20) & 1) == 1;
-        let (rd, rest) = split_with_mask(rest, 0b1111 << 11);
+    fn new(value: u32, rn: Register) -> Result<Self, ParseError> {
+        let s = ((value >> 20) & 1) == 1;
+        let (rd, rest) = split_with_mask(value, 0b1111 << 11);
         let rd = ((rd >> 12) as u8).try_into()?;
         let shifter = rest.try_into()?;
         Ok(Self {
@@ -80,9 +67,15 @@ pub struct NoDestinationDataInstruction {
     s: bool,
     shifter: ShifterOperand,
 }
-impl NoDestinationDataInstruction{
-    fn new(value:u32,rn:Register)->Result<Self,ParseError>{
-        todo!("No destination data instruction")
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MOVLikeDataInstruction {
+    destination: Register,
+    s: bool,
+    shifter: ShifterOperand,
+}
+impl NoDestinationDataInstruction {
+    fn new(value: u32, rn: Register) -> Result<Self, ParseError> {
+        todo!("")
     }
 }
 impl TryFrom<u32> for DataProssessingInstruction {

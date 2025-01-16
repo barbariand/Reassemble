@@ -5,81 +5,54 @@ use super::{AddressingMode, PostIndexedAddressingMode};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LoadAndStoreInstruction {
     ///Load Word. See LDR on page A4-43.
-    LDR {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDR(LoadAndStoreGenericInsturction),
     ///Load Byte. See LDRB on page A4-46.
-    LDRB {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRB(LoadAndStoreGenericInsturction),
     ///Load Byte with User Mode Privilege. See LDRBT on page A4-48.
-    LDRBT {
-        destination: Register,
-        adressing_mode: PostIndexedAddressingMode,
-    },
+    LDRBT(LoadAndStorePostIndexInstruction),
     ///Load Doubleword. See LDRD on page A4-50.
-    LDRD {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRD(LoadAndStoreGenericInsturction),
     ///Load Exclusive. See LDREX on page A4-52.
-    LDREX {
-        destination: Register,
-        adress: Register,
-    },
+    LDREX(LDREX),
     ///Load Unsigned Halfword. See LDRH on page A4-54.
-    LDRH {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRH(LoadAndStoreGenericInsturction),
     ///Load Signed Byte. See LDRSB on page A4-56.
-    LDRSB {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRSB(LoadAndStoreGenericInsturction),
     ///Load Signed Halfword. See LDRSH on page A4-58.
-    LDRSH {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRSH(LoadAndStoreGenericInsturction),
     ///Load Word with User Mode Privilege. See LDRT on page A4-60.
-    LDRT {
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    LDRT(LoadAndStoreGenericInsturction),
     ///Store Word. See STR on page A4-193.
-    STR{
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    STR(LoadAndStoreGenericInsturction),
     ///Store Byte. See STRB on page A4-195.
-    STRB{
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    STRB(LoadAndStoreGenericInsturction),
     ///Store Byte with User Mode Privilege. See STRBT on page A4-197.
-    STRBT{
-        destination: Register,
-        adressing_mode: PostIndexedAddressingMode,
-    },
+    STRBT(LoadAndStorePostIndexInstruction),
     ///Store Doubleword. See STRD on page A4-199.
-    STRD{
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    STRD(LoadAndStoreGenericInsturction),
     ///Store Halfword. See STRH on page A4-204.
-    STRH{
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    STRH(LoadAndStoreGenericInsturction),
     ///Store Word with User Mode Privilege. See STRT on page A4-206.
-    STRT{
-        destination: Register,
-        adressing_mode: AddressingMode,
-    },
+    STRT(LoadAndStoreGenericInsturction),
     Multiple(LoadAndStoreMultiple),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LoadAndStoreGenericInsturction {
+    destination: Register,
+    adressing_mode: AddressingMode,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LoadAndStorePostIndexInstruction {
+    destination: Register,
+    adressing_mode: PostIndexedAddressingMode,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LDREX {
+    destination: Register,
+    adress: Register,
 }
 impl From<LoadAndStoreMultiple> for LoadAndStoreInstruction {
     fn from(value: LoadAndStoreMultiple) -> Self {
