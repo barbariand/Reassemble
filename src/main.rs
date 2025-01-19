@@ -2,6 +2,7 @@
 pub mod errors;
 mod instructions;
 mod parser;
+mod dsi;
 use std::path::PathBuf;
 
 use clap::Parser as ClapParser;
