@@ -39,6 +39,24 @@ pub enum DataProssessingInstruction {
     ///Test. See TST on page A4-230.
     TST(NoDestinationDataInstruction),
 }
+impl DataProssessingInstruction {
+    pub fn new(value: u32, s: bool) -> Result<Self, ParseError> {
+        let (opcode, rest) = split_with_mask(value, 0b1111 << 20);
+        let (rn, rest) = split_with_mask(rest, 0b1111 << 15);
+        let rn = ((rn >> 16) as u8).try_into()?;
+        use DataProssessingInstruction::*;
+        Ok(match opcode >> 20 {
+            0b0101 => ADC(GenericDataInstruction::new(rest, rn, s)?),
+            0b0100 => ADD(GenericDataInstruction::new(rest, rn, s)?),
+            0b0000 => AND(GenericDataInstruction::new(rest, rn, s)?),
+            0b1110 => BIC(GenericDataInstruction::new(rest, rn, s)?),
+            0b1010 => CMP(NoDestinationDataInstruction::new(rest, rn, s)?),
+            0b1110 => BIC(GenericDataInstruction::new(rest, rn, s)?),
+
+            bin => todo!("unimpemented dataprocessing opcode {:b}", bin),
+        })
+    }
+}
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct GenericDataInstruction {
     destination: Register,
@@ -47,8 +65,7 @@ pub struct GenericDataInstruction {
     shifter: ShifterOperand,
 }
 impl GenericDataInstruction {
-    fn new(value: u32, rn: Register) -> Result<Self, ParseError> {
-        let s = ((value >> 20) & 1) == 1;
+    fn new(value: u32, rn: Register, s: bool) -> Result<Self, ParseError> {
         let (rd, rest) = split_with_mask(value, 0b1111 << 11);
         let rd = ((rd >> 12) as u8).try_into()?;
         let shifter = rest.try_into()?;
@@ -74,24 +91,17 @@ pub struct MOVLikeDataInstruction {
     shifter: ShifterOperand,
 }
 impl NoDestinationDataInstruction {
-    fn new(value: u32, rn: Register) -> Result<Self, ParseError> {
-        todo!("")
-    }
-}
-impl TryFrom<u32> for DataProssessingInstruction {
-    type Error = ParseError;
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        let (opcode, rest) = split_with_mask(value, 0b1111 << 20);
-        let (rn, rest) = split_with_mask(rest, 0b1111 << 15);
-        let rn = ((rn >> 16) as u8).try_into()?;
-        use DataProssessingInstruction::*;
-        Ok(match opcode >> 20 {
-            0b0101 => ADC(GenericDataInstruction::new(rest, rn)?),
-            0b0100 => ADD(GenericDataInstruction::new(rest, rn)?),
-            0b0000 => AND(GenericDataInstruction::new(rest, rn)?),
-            0b1110 => BIC(GenericDataInstruction::new(rest, rn)?),
-            bin => todo!("unimpemented dataprocessing opcode {:b}", bin),
+    fn new(value: u32, rn: Register, s: bool) -> Result<Self, ParseError> {
+        let (rd, rest) = split_with_mask(value, 0b1111 << 11);
+        if rd > 0 {
+            return Err(ParseError::ShouldBeZero(rd));
+        }
+        let shifter = rest.try_into()?;
+        Ok(Self {
+            first_operand: rn,
+            s,
+            shifter,
         })
     }
 }
+

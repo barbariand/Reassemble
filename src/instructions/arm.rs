@@ -1,6 +1,6 @@
+use self::register_access_instructions::RegisterAccessInstruction;
 use crate::errors::ParseError;
-use crate::instructions::split_with_mask;
-
+use crate::instructions::{check_bit, split_with_mask};
 use arithmetic::AritmeticInstruction;
 use branch::BranchInstruction;
 use coprocessor::CoprocessorInstruction;
@@ -10,8 +10,6 @@ use loadandstore::LoadAndStoreInstruction;
 use multiply::MultiplyInstruction;
 use semaphore::SemaphoreInstruction;
 use unconditional::UnconditionalInstruction;
-
-use self::register_access_instructions::RegisterAccessInstruction;
 mod adresssing;
 pub mod arithmetic;
 pub mod branch;
@@ -75,25 +73,6 @@ pub enum PartialArmInstruction {
     Exceptiongenerating(ExceptiongeneratingInstruction),
     Coprocessor(CoprocessorInstruction),
     RegisterAccess(RegisterAccessInstruction),
-}
-impl TryFrom<u32> for PartialArmInstruction {
-    type Error = ParseError;
-
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
-        let (switch, rest) = split_with_mask(value, 0b11 << 25);
-        use PartialArmInstruction::*;
-        Ok(match switch >> 25 {
-            0b000 => DataProssessing(rest.try_into()?),
-            0b001 => DataProssessing(rest.try_into()?),
-            0b010 => todo!(),
-            0b011 => todo!(),
-            0b100 => todo!(),
-            0b101 => todo!(),
-            0b110 => todo!(),
-            0b111 => todo!(),
-            _ => todo!(),
-        })
-    }
 }
 impl TryFrom<u32> for ArmInstruction {
     type Error = ParseError;
@@ -172,4 +151,58 @@ impl TryFrom<u32> for ArmInstruction {
             }
         })
     }
+}
+impl TryFrom<u32> for PartialArmInstruction {
+    type Error = ParseError;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let (switch, rest) = split_with_mask(value, 0b111 << 25);
+        match switch >> 25 {
+            0b000 => parse_0b000(rest),
+            0b001 => parse_0b001(rest),
+            0b010 => parse_0b010(rest),
+            0b011 => parse_0b011(rest),
+            0b100 => parse_0b100(rest),
+            0b101 => parse_0b101(rest),
+            0b110 => parse_0b110(rest),
+            0b111 => parse_0b111(rest),
+            e => todo!("invalid code {e:b}"),
+        }
+    }
+}
+fn parse_0b000(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    DataProssessingInstruction::new(rest, false).map(PartialArmInstruction::DataProssessing)
+}
+fn parse_0b001(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    DataProssessingInstruction::new(rest, true).map(PartialArmInstruction::DataProssessing)
+}
+fn parse_0b010(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    todo!("got code b010")
+}
+fn parse_0b011(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    todo!("got code b011")
+}
+fn parse_0b100(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    todo!("got code b100")
+}
+fn parse_0b101(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    todo!("got code b101")
+}
+fn parse_0b110(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    todo!("got code b110")
+}
+fn parse_0b111(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    let (switch, rest) = split_with_mask(rest, 0b1 << 24);
+    match switch {
+        0 => parse_0b1110(rest),
+        1 => parse_0b1111(rest),
+        e => unreachable!("Invalid masking expected <2, got {}", e),
+    }
+}
+fn parse_0b1110(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    let is_transfer = check_bit(rest, 4);
+    CoprocessorInstruction::new(rest, is_transfer).map(PartialArmInstruction::Coprocessor)
+}
+fn parse_0b1111(rest: u32) -> Result<PartialArmInstruction, ParseError> {
+    ExceptiongeneratingInstruction::new(rest).map(PartialArmInstruction::Exceptiongenerating)
 }

@@ -4,6 +4,8 @@ use thiserror::Error as ThisError;
 pub enum ParseError {
     #[error("Mask was invalid {invalid_set_bytes:2}")]
     InvalidMask { invalid_set_bytes: u32 },
+    #[error("Should have been zero but was {0:2}")]
+    ShouldBeZero(u32),
 }
 #[derive(ThisError, Debug)]
 pub enum DisasemblerError {

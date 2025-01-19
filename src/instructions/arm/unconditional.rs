@@ -20,24 +20,24 @@ pub enum UnconditionalInstruction {
         opcode_1: u8,
         opcode_2: u8,
     },
-    MRC{
+    MRC {
         coprocessor: Coprocessor,
-        value:Register,
+        value: Register,
         destination: CRegister,
         additional_destination: CRegister,
         opcode_1: u8,
         opcode_2: u8,
     },
-    MRRC{
+    MRRC {
         coprocessor: Coprocessor,
         opcode: u8,
-        first_register:Register,
-        second_register:Register,
-        destination:CRegister,
+        first_register: Register,
+        second_register: Register,
+        destination: CRegister,
     },
     ///Pre load data. See PLD on page A4-90.
-    PLD{
-        addressing_mode:AddressingMode,
+    PLD {
+        addressing_mode: AddressingMode,
     },
 }
 
@@ -45,6 +45,6 @@ impl TryFrom<u32> for UnconditionalInstruction {
     type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        todo!()
+        todo!("unconditional")
     }
 }

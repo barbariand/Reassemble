@@ -189,6 +189,11 @@ pub const fn check_rest_null_mask(value: u32, mask: u32) -> Result<u32, ParseErr
         Ok(value & mask)
     }
 }
+#[inline(always)]
+pub const fn check_bit(value: u32, bit: u32) -> bool {
+    ((value >> bit) & 1) == 1
+}
+#[inline(always)]
 pub const fn split_with_mask(value: u32, mask: u32) -> (u32, u32) {
     let first = value & mask;
     let second = value & !mask;
@@ -207,11 +212,11 @@ pub enum ShifterOperand {
     Register(Register),
     ShiftLeft(u32),
 }
-impl TryFrom<u32> for ShifterOperand{
-    type Error=ParseError;
+impl TryFrom<u32> for ShifterOperand {
+    type Error = ParseError;
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
-        let (i,rest)=split_with_mask(value, 1<<24);
+        let (i, rest) = split_with_mask(value, 1 << 24);
         Ok(Self::Immediate(value))
     }
 }

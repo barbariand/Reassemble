@@ -17,7 +17,7 @@ impl Parser {
         self.iter
             .into_iter()
             .map(|e| {
-                println!("{:2b}", e);
+                println!("{:#032b}", e);
                 e
             })
             .map(|e| match e.try_into() {
@@ -36,7 +36,7 @@ impl Parser {
         let (head, r) = file
             .split_first_chunk::<4096>()
             .ok_or(DisasemblerError::FileToShort)?;
-        let header: HeaderNDS = unsafe { transmute(*head) };
+        let header = HeaderNDS::from_bytes(*head);
 
         let iter = Self::from_bin(
             &r[header.arm9_offset as usize - 0x1000..][..header.arm9_size as usize],
