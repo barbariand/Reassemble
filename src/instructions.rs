@@ -1,11 +1,11 @@
 #![allow(unused)]
-//! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a?token=#E3.Ciaeiijh
+//! using https://documentation-service.arm.com/static/5f8dacc8f86e16515cdb865a
 pub mod arm;
 
 use crate::errors::{DisasemblerError, ParseError};
 use bitflags::bitflags;
 use std::mem;
-use std::ops::BitOr;
+use std::ops::{BitOr, RangeInclusive};
 use ux::u4;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PSRFlags {
@@ -198,6 +198,27 @@ pub const fn split_with_mask(value: u32, mask: u32) -> (u32, u32) {
     let first = value & mask;
     let second = value & !mask;
     (first, second)
+}
+#[inline(always)]
+pub const fn split_with_range(value: u32, mask: RangeInclusive<u32>) -> (u32, u32) {
+    let start = *mask.start();
+    let end = *mask.end();
+
+    // Create a bitmask for the range.
+    let range_mask = if end >= 31 {
+        !0u32 // all ones
+    } else {
+        ((1u32 << (end + 1)) - 1)
+    }
+    .wrapping_sub((1u32 << start).wrapping_sub(1));
+
+    // Extract the bits within the range.
+    let split = (value & range_mask) >> start;
+
+    // Clear the bits within the range and keep the rest.
+    let new_value = value & !range_mask;
+
+    (split, new_value)
 }
 pub mod consts {
     pub const COND_MASK: u32 = 0b1111 << 28;

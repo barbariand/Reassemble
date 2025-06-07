@@ -1,6 +1,7 @@
 use std::mem::transmute;
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct HeaderNDS {
     pub title: [u8; 12],
     pub tid: u32,

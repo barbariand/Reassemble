@@ -1,20 +1,19 @@
 #![feature(slice_as_chunks)]
+mod dsi;
 pub mod errors;
 mod instructions;
 mod parser;
-mod dsi;
 use std::path::PathBuf;
-
 use clap::Parser as ClapParser;
-use tracing::error;
-
+use tracing::{debug, error};
 use self::errors::DisasemblerError;
-use self::instructions::arm::ArmInstruction;
 use self::parser::Parser;
 #[derive(ClapParser)]
 struct Options {
     #[clap( value_parser = file_exists )]
     file: PathBuf,
+    #[clap(long, short, default_value = "false")]
+    dsi: bool,
 }
 fn file_exists(v: &str) -> Result<PathBuf, String> {
     match std::fs::exists(v) {

@@ -183,7 +183,7 @@ fn parse_0b011(rest: u32) -> Result<PartialArmInstruction, ParseError> {
     todo!("got code b011")
 }
 fn parse_0b100(rest: u32) -> Result<PartialArmInstruction, ParseError> {
-    todo!("got code b100")
+    LoadAndStoreInstruction::new(rest).map(PartialArmInstruction::LoadAndStore)
 }
 fn parse_0b101(rest: u32) -> Result<PartialArmInstruction, ParseError> {
     todo!("got code b101")

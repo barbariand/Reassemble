@@ -9,8 +9,6 @@ pub enum ParseError {
 }
 #[derive(ThisError, Debug)]
 pub enum DisasemblerError {
-    #[error("File is missing NDS header")]
-    FileToShort,
     #[error("File is missaligned by {0} bytes")]
     UnaligedFile(usize),
     #[error("Parse error: {0}")]
